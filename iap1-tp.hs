@@ -70,17 +70,23 @@ estaRobertoCarlos :: RedSocial -> Bool
 estaRobertoCarlos red = estaNombreEnRed red "Roberto Carlos"
 
 
--- describir qué hace la función: .....
+-- Recibe la red social y un usuario
+-- Devuelve una lista con todas las publicaciones de ese usuario 
 publicacionesDe :: RedSocial -> Usuario -> [Publicacion]
-publicacionesDe = undefined
+publicacionesDe red usuario = listaDePublicaciones (third red) usuario 
+    where third (_,_,c) = c
 
--- describir qué hace la función: .....
+--Recibe la red social y un usuario
+--Recorre todas las publicaciones de la red y retorna una lista con todas 
+--las publicaciones que le gustaron al usuario parámetro
 publicacionesQueLeGustanA :: RedSocial -> Usuario -> [Publicacion]
-publicacionesQueLeGustanA = undefined
+publicacionesQueLeGustanA red usuario = listaDePublicacionesQueLeGustanA (third red) usuario 
+    where third (_,_,c) = c
 
--- describir qué hace la función: .....
+--Recibe dos usuarios y una red social
+--Verifica si las listas de publicaciones que les gustan a cada uno tienen los mismos elementos
 lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
-lesGustanLasMismasPublicaciones = undefined
+lesGustanLasMismasPublicaciones red u1 u2 = mismosElementos' (publicacionesQueLeGustanA red u1)(publicacionesQueLeGustanA red u2)
 
 -- describir qué hace la función: .....
 tieneUnSeguidorFiel :: RedSocial -> Usuario -> Bool
@@ -132,7 +138,54 @@ estaNombreEnRed red nombre   | nombresDeUsuarios red == [] = False
                              | nombre == head (nombresDeUsuarios red) = True
                              | otherwise = estaNombreEnRed (quitarPrimerUsuario red) nombre
 
+-- Recibe una lista de publicaciones y un usuario 
+-- Recorre toda la lista y si las publicaciones se corresponde al usuario las pone en otra lista
+-- Termina retornando una lista con todas las publicaciones de ese usuario
+listaDePublicaciones :: [Publicacion] -> Usuario -> [Publicacion]
+listaDePublicaciones [] usuario = []
+listaDePublicaciones (x:xs) usuario
+    |usuario == first x = x:listaDePublicaciones xs usuario
+    |otherwise = listaDePublicaciones xs usuario
+    where first (a,b,c) = a
 
+--Recibe una lista de publicaciones y un usuario
+--Recorre toda las publicaciones de la red social y entra en el apartado de likes
+--Devuelve lista con todas las publicaciones que le gustan al usuario recibido como parámetro
+listaDePublicacionesQueLeGustanA :: [Publicacion] -> Usuario -> [Publicacion]
+listaDePublicacionesQueLeGustanA [] usuario = []
+listaDePublicacionesQueLeGustanA (x:xs) usuario
+    |pertenece usuario (third x) = x:listaDePublicacionesQueLeGustanA xs usuario
+    |otherwise = listaDePublicacionesQueLeGustanA xs usuario
+    where third (_,_,c) = c
+
+--Recibe dos listas con publicaciones y las compara
+--Si tienen los mismos elementos retorna True, sino False
+mismosElementos' :: [Publicacion] -> [Publicacion] -> Bool
+mismosElementos' [] [] = True
+mismosElementos' _ [] = False
+mismosElementos' [] _ = False
+mismosElementos' (x:xs) (y:ys) 
+    |pertenece x (y:ys) && mismosElementos' xs (quitarTodos x ys) = True
+    |x == y && mismosElementos' xs (quitarTodos x ys) = True
+    |otherwise = False
+
+--Quita el elemento que recibe como parámetro de la lista que recibe como parámetro
+quitar :: (Eq t) => t -> [t] -> [t] 
+quitar _ [] = []
+quitar a (x:xs) | a == x = xs 
+                |otherwise = x: quitar a xs 
+
+--Quita todas las apariciones del elemento que recibe como parámetro de la lista que recibe como parámetro
+quitarTodos :: (Eq t) => t -> [t] -> [t]
+quitarTodos _ [] = []
+quitarTodos a (x:xs) 
+    |estaRepetido a (x:xs) = quitarTodos a (quitar a (x:xs)) 
+    |otherwise = quitar a (x:xs)
+
+--Verifica si el elemento dado está repetido en la lista que recibe como parámetro
+estaRepetido :: (Eq t) => t -> [t] -> Bool
+estaRepetido _ [] = False
+estaRepetido a (x:xs) = a == x || estaRepetido a xs
 
 
 
