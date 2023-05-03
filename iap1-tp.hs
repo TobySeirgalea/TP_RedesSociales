@@ -70,25 +70,36 @@ estaRobertoCarlos :: RedSocial -> Bool
 estaRobertoCarlos red = estaNombreEnRed red "Roberto Carlos"
 
 
--- describir qué hace la función: .....
+-- Recibe la red social y un usuario
+-- Devuelve una lista con todas las publicaciones de ese usuario 
 publicacionesDe :: RedSocial -> Usuario -> [Publicacion]
-publicacionesDe = undefined
+publicacionesDe red usuario = listaDePublicaciones (third red) usuario 
+    where third (_,_,c) = c
 
--- describir qué hace la función: .....
+--Recibe la red social y un usuario
+--Recorre todas las publicaciones de la red y retorna una lista con todas 
+--las publicaciones que le gustaron al usuario parámetro
 publicacionesQueLeGustanA :: RedSocial -> Usuario -> [Publicacion]
-publicacionesQueLeGustanA = undefined
+publicacionesQueLeGustanA red usuario = listaDePublicacionesQueLeGustanA (third red) usuario 
+    where third (_,_,c) = c
 
 -- describir qué hace la función: .....
 lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
-lesGustanLasMismasPublicaciones = undefined
+--Recibe dos usuarios y una red social
+--Verifica si las listas de publicaciones que les gustan a cada uno tienen los mismos elementos
+lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
+lesGustanLasMismasPublicaciones red u1 u2 = mismosElementos' (publicacionesQueLeGustanA red u1)(publicacionesQueLeGustanA red u2)
 
 -- describir qué hace la función: .....
 tieneUnSeguidorFiel :: RedSocial -> Usuario -> Bool
 tieneUnSeguidorFiel = undefined
 
--- describir qué hace la función: .....
+-- Recibe una red social y dos usuarios
+-- Retorna un booleano que indica si existe una cadena de relaciones, en formato de lista
+-- que inicie con el primer usuario que recibe como parámetro y termine con el segundo
 existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool
-existeSecuenciaDeAmigos = undefined
+existeSecuenciaDeAmigos red u1 u2 = listaIncluida (first red) (sublistaDesdeHasta (first red) u1 u2) && sonDeLaRed red (first red) && cadenaDeAmigos (first red) red
+    where first (a,_,_) = a
 
 
 -- Funciones auxiliares:
@@ -132,13 +143,106 @@ estaNombreEnRed red nombre   | nombresDeUsuarios red == [] = False
                              | nombre == head (nombresDeUsuarios red) = True
                              | otherwise = estaNombreEnRed (quitarPrimerUsuario red) nombre
 
+-- Recibe una lista de publicaciones y un usuario 
+-- Recorre toda la lista y si las publicaciones se corresponde al usuario las pone en otra lista
+-- Termina retornando una lista con todas las publicaciones de ese usuario
+listaDePublicaciones :: [Publicacion] -> Usuario -> [Publicacion]
+listaDePublicaciones [] usuario = []
+listaDePublicaciones (x:xs) usuario
+    |usuario == first x = x:listaDePublicaciones xs usuario
+    |otherwise = listaDePublicaciones xs usuario
+    where first (a,b,c) = a
+
+--Recibe una lista de publicaciones y un usuario
+--Recorre toda las publicaciones de la red social y entra en el apartado de likes
+--Devuelve lista con todas las publicaciones que le gustan al usuario recibido como parámetro
+listaDePublicacionesQueLeGustanA :: [Publicacion] -> Usuario -> [Publicacion]
+listaDePublicacionesQueLeGustanA [] usuario = []
+listaDePublicacionesQueLeGustanA (x:xs) usuario
+    |pertenece usuario (third x) = x:listaDePublicacionesQueLeGustanA xs usuario
+    |otherwise = listaDePublicacionesQueLeGustanA xs usuario
+    where third (_,_,c) = c
+
+--Recibe dos listas con publicaciones y las compara
+--Si tienen los mismos elementos retorna True, sino False
+mismosElementos' :: [Publicacion] -> [Publicacion] -> Bool
+mismosElementos' [] [] = True
+mismosElementos' _ [] = False
+mismosElementos' [] _ = False
+mismosElementos' (x:xs) (y:ys) 
+    |pertenece x (y:ys) && mismosElementos' xs (quitarTodos x ys) = True
+    |x == y && mismosElementos' xs (quitarTodos x ys) = True
+    |otherwise = False
+
+--Quita el elemento que recibe como parámetro de la lista que recibe como parámetro
+quitar :: (Eq t) => t -> [t] -> [t] 
+quitar _ [] = []
+quitar a (x:xs) | a == x = xs 
+                |otherwise = x: quitar a xs 
+
+--Quita todas las apariciones del elemento que recibe como parámetro de la lista que recibe como parámetro
+quitarTodos :: (Eq t) => t -> [t] -> [t]
+quitarTodos _ [] = []
+quitarTodos a (x:xs) 
+    |estaRepetido a (x:xs) = quitarTodos a (quitar a (x:xs)) 
+    |otherwise = quitar a (x:xs)
+
+--Verifica si el elemento dado está repetido en la lista que recibe como parámetro
+estaRepetido :: (Eq t) => t -> [t] -> Bool
+estaRepetido _ [] = False
+estaRepetido a (x:xs) = a == x || estaRepetido a xs
 
 
+-- Dada una lista de usuarios devuelve una lista recortada
+-- Esta lista contiene todos los usuarios de la original desde el primer parámetro hasta el segundo
+sublistaDesdeHasta :: [Usuario] -> Usuario -> Usuario -> [Usuario]
+sublistaDesdeHasta [] _ _ = []
+sublistaDesdeHasta (x:xs) u1 u2
+    |posicion (x:xs) x < posicion (x:xs) u1 = sublistaDesdeHasta xs u1 u2
+    |posicion (x:xs) x >= posicion (x:xs) u1 && posicion (x:xs) x <= posicion (x:xs) u2 = x: sublistaDesdeHasta xs u1 u2
+    |posicion (x:xs) x > posicion (x:xs) u2 = []
 
+-- Dada una lista y un usuario retorna la posicion que ocupa este en dicha lista
+posicion :: [Usuario] -> Usuario -> Integer
+posicion [] _ = -1
+posicion (x:xs) u1 
+    |not (pertenece u1 (x:xs)) = 0
+    |x /= u1 = 1 + posicion xs u1
+    |x == u1 = 1
+    |otherwise = posicion xs u1
 
+-- Predicado que dada una red social y una lista de usuarios verifica si esta pertenece a la red
+sonDeLaRed :: RedSocial -> [Usuario] -> Bool
+sonDeLaRed red [] = True
+sonDeLaRed red (x:xs) = pertenece x (usuarios red) && sonDeLaRed red xs
 
+-- Predicado que dada una lista de usuarios y una red social
+-- Retorna True existe una cadena, tal que si un usuario se relaciona con uno, este se relaciona con el siguiente 
+cadenaDeAmigos :: [Usuario] -> RedSocial -> Bool 
+cadenaDeAmigos [] red = False
+cadenaDeAmigos [_] red = True
+cadenaDeAmigos (x:y:xs) red 
+    |relacionadosDirecto x y red && cadenaDeAmigos (y:xs) red = True
+    |otherwise = False
 
+-- Dadas dos listas retorna True si la lista del segundo parámetro está incluida en la primera
+listaIncluida :: [Usuario] -> [Usuario] -> Bool
+listaIncluida [] [] = True
+listaIncluida [] _ = False
+listaIncluida _ [] = True
+listaIncluida (x:xs) (y:ys) = pertenece y (x:xs) && listaIncluida (x:xs) ys
 
+-- Polimorfismo que dado un elemento retorna True si este se encuentra dentro de la lista que recibe como segundo parámetro
+pertenece :: (Eq t) => t -> [t] -> Bool
+pertenece _ [] = False
+pertenece a (x:xs)
+    |a == x = True
+    |otherwise = pertenece a xs
+    
+-- Dados dos usuarios y una red social retorna True si existe una relación entre ambos dentro de la red
+relacionadosDirecto :: Usuario -> Usuario -> RedSocial -> Bool
+relacionadosDirecto x y (a,b,c) = pertenece (x,y) b || pertenece (y,x) b     
+ 
 
 -- Ejemplos de Redes Sociales
 
