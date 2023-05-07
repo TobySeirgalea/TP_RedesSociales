@@ -73,15 +73,13 @@ estaRobertoCarlos red = estaNombreEnRed red "Roberto Carlos"
 -- Recibe la red social y un usuario
 -- Devuelve una lista con todas las publicaciones de ese usuario 
 publicacionesDe :: RedSocial -> Usuario -> [Publicacion]
-publicacionesDe red usuario = listaDePublicaciones (third red) usuario 
-    where third (_,_,c) = c
+publicacionesDe red usuario = listaDePublicaciones (publicaciones red) usuario 
 
 --Recibe la red social y un usuario
 --Recorre todas las publicaciones de la red y retorna una lista con todas 
 --las publicaciones que le gustaron al usuario parámetro
 publicacionesQueLeGustanA :: RedSocial -> Usuario -> [Publicacion]
-publicacionesQueLeGustanA red usuario = listaDePublicacionesQueLeGustanA (third red) usuario 
-    where third (_,_,c) = c
+publicacionesQueLeGustanA red usuario = listaDePublicacionesQueLeGustanA (publicaciones red) usuario 
 
 -- describir qué hace la función: .....
 lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
@@ -98,8 +96,7 @@ tieneUnSeguidorFiel = undefined
 -- Retorna un booleano que indica si existe una cadena de relaciones, en formato de lista
 -- que inicie con el primer usuario que recibe como parámetro y termine con el segundo
 existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool
-existeSecuenciaDeAmigos red u1 u2 = listaIncluida (first red) (sublistaDesdeHasta (first red) u1 u2) && sonDeLaRed red (first red) && cadenaDeAmigos (first red) red
-    where first (a,_,_) = a
+existeSecuenciaDeAmigos red u1 u2 = listaIncluida (usuarios red) (sublistaDesdeHasta (usuarios red) u1 u2) && sonDeLaRed red (usuarios red) && cadenaDeAmigos (usuarios red) red
 
 
 -- Funciones auxiliares:
